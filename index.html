@@ -1,0 +1,687 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8th Grade Tech Escape Room</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #101827;
+    color: white;
+    text-align: center;
+    min-height: 100vh;
+}
+
+header {
+    background: #080e19;
+    padding: 18px;
+    border-bottom: 3px solid #00d9ff;
+}
+
+header h1 {
+    margin: 0;
+    font-size: clamp(22px, 4vw, 34px);
+    color: #00d9ff;
+}
+
+.screen {
+    display: none;
+    padding: 25px 15px;
+}
+
+.screen.active {
+    display: block;
+}
+
+.login-box {
+    max-width: 420px;
+    margin: 45px auto;
+    padding: 30px;
+    background: #1c293d;
+    border: 2px solid #00d9ff;
+    border-radius: 15px;
+    box-shadow: 0 0 25px #00d9ff22;
+}
+
+h2 {
+    color: #00d9ff;
+    margin-top: 0;
+}
+
+input {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    margin: 14px 0;
+    border-radius: 7px;
+    border: 2px solid #52647d;
+    background: #0c1421;
+    color: white;
+    font-size: 17px;
+}
+
+button {
+    border: none;
+    padding: 13px 22px;
+    margin: 8px;
+    border-radius: 8px;
+    background: #00d9ff;
+    color: #07121e;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #73edff;
+}
+
+#loginMessage {
+    color: #ff7373;
+    font-weight: bold;
+    min-height: 24px;
+}
+
+.instructions {
+    color: #c7d5e8;
+    line-height: 1.5;
+}
+
+.game-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 35px;
+    flex-wrap: wrap;
+    margin: 15px auto;
+    font-size: 21px;
+    font-weight: bold;
+}
+
+#timer {
+    color: #ffe66d;
+}
+
+#moves {
+    color: #00d9ff;
+}
+
+#gameMessage {
+    min-height: 28px;
+    color: #ffe66d;
+    font-weight: bold;
+}
+
+.memory-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 82px));
+    gap: 10px;
+    justify-content: center;
+    margin: 20px auto;
+    max-width: 540px;
+}
+
+.card {
+    aspect-ratio: 1 / 1;
+    border: 2px solid #00d9ff;
+    border-radius: 10px;
+    background: #263951;
+    color: white;
+    font-size: clamp(25px, 5vw, 42px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: background 0.15s, transform 0.15s;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.card:hover {
+    background: #354d6b;
+}
+
+.card.flipped {
+    background: #f0f6ff;
+    color: #111827;
+    border-color: #ffe66d;
+}
+
+.card.matched {
+    background: #145c48;
+    border-color: #4dffb5;
+    color: white;
+    cursor: default;
+}
+
+.card:disabled {
+    opacity: 1;
+}
+
+#secretBox {
+    display: none;
+    max-width: 500px;
+    margin: 25px auto;
+    padding: 25px;
+    background: #164b3d;
+    border: 3px solid #4dffb5;
+    border-radius: 15px;
+    box-shadow: 0 0 25px #4dffb533;
+}
+
+#secretNumber {
+    font-size: 75px;
+    color: #4dffb5;
+    font-weight: bold;
+    margin: 15px;
+}
+
+#timeoutBox {
+    display: none;
+    max-width: 500px;
+    margin: 25px auto;
+    padding: 25px;
+    border: 2px solid #ff7373;
+    border-radius: 15px;
+    background: #421f2a;
+}
+
+.small-note {
+    color: #aebfd4;
+    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+    .memory-grid {
+        grid-template-columns: repeat(4, minmax(0, 65px));
+        gap: 7px;
+    }
+
+    .screen {
+        padding: 15px 8px;
+    }
+
+    .login-box {
+        margin: 20px auto;
+        padding: 22px;
+    }
+
+    .card {
+        font-size: 30px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>TECH ESCAPE ROOM</h1>
+</header>
+
+<!-- LOGIN SCREEN -->
+<section id="loginScreen" class="screen active">
+
+    <div class="login-box">
+        <h2>SECURE LOGIN</h2>
+
+        <p class="instructions">
+            The system is locked. Enter the correct username
+            and password to access the next challenge.
+        </p>
+
+        <form id="loginForm">
+            <input
+                type="text"
+                id="username"
+                placeholder="Username"
+                autocomplete="off"
+                required
+            >
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                autocomplete="off"
+                required
+            >
+
+            <button type="submit">LOG IN</button>
+        </form>
+
+        <p id="loginMessage" role="alert" aria-live="polite"></p>
+    </div>
+
+</section>
+
+<!-- MEMORY GAME SCREEN -->
+<section id="gameScreen" class="screen">
+
+    <h2>TECHNOLOGY MEMORY CHALLENGE</h2>
+
+    <p class="instructions">
+        Match all 14 pairs of technology items before time runs out!
+        Click two cards to reveal their images.
+        If they match, they stay visible.
+        If they do not match, they turn back over.
+    </p>
+
+    <div class="game-info">
+        <div>TIME: <span id="timer">90</span> seconds</div>
+        <div>MOVES: <span id="moves">0</span></div>
+        <div>PAIRS: <span id="pairs">0 / 14</span></div>
+    </div>
+
+    <p id="gameMessage" aria-live="polite">
+        Find all 14 matching pairs!
+    </p>
+
+    <div id="memoryGrid" class="memory-grid"></div>
+
+    <button id="restartButton" type="button">
+        RESTART MEMORY GAME
+    </button>
+
+    <div id="timeoutBox">
+        <h2 style="color:#ff7373;">TIME'S UP!</h2>
+        <p>You did not finish in time. Restart the memory game and try again!</p>
+        <button id="tryAgainButton" type="button">
+            TRY AGAIN
+        </button>
+    </div>
+
+    <div id="secretBox">
+        <h2>MEMORY CHALLENGE COMPLETE!</h2>
+
+        <p>
+            Excellent work! You unlocked the secret number
+            needed to solve the final escape room puzzle.
+        </p>
+
+        <div id="secretNumber">6</div>
+
+        <p>Remember this number. You will need it for the final puzzle!</p>
+    </div>
+
+</section>
+
+<script>
+// ==========================================
+// LOGIN SETTINGS
+// ==========================================
+
+const correctUsername = "1Qtech";
+const correctPassword = "m@Lotti$co0l";
+
+const loginForm = document.getElementById("loginForm");
+const loginMessage = document.getElementById("loginMessage");
+
+loginForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    if (username === correctUsername &&
+        password === correctPassword) {
+
+        loginMessage.textContent = "";
+
+        document.getElementById("loginScreen")
+            .classList.remove("active");
+
+        document.getElementById("gameScreen")
+            .classList.add("active");
+
+        startGame();
+
+    } else if (username !== correctUsername &&
+               password !== correctPassword) {
+
+        loginMessage.textContent =
+            "Both the username and password are incorrect.";
+
+    } else if (username !== correctUsername) {
+
+        loginMessage.textContent =
+            "The username is incorrect. Try again.";
+
+    } else {
+
+        loginMessage.textContent =
+            "The password is incorrect. Try again.";
+    }
+});
+
+
+// ==========================================
+// MEMORY GAME SETTINGS
+// ==========================================
+
+const GAME_TIME = 90;
+const TOTAL_PAIRS = 14;
+
+// Fourteen different technology items.
+// Each item appears twice.
+
+const technologyItems = [
+    { name: "Laptop", image: "💻" },
+    { name: "Mouse", image: "🖱️" },
+    { name: "Keyboard", image: "⌨️" },
+    { name: "Printer", image: "🖨️" },
+    { name: "Phone", image: "📱" },
+    { name: "Camera", image: "📷" },
+    { name: "Robot", image: "🤖" },
+    { name: "Satellite", image: "🛰️" },
+    { name: "Plug", image: "🔌" },
+    { name: "Disk", image: "💾" },
+    { name: "Monitor", image: "🖥️" },
+    { name: "Battery", image: "🔋" },
+    { name: "Printer Ink", image: "🧴" },
+    { name: "Smart Watch", image: "⌚" }
+];
+
+let firstCard = null;
+let secondCard = null;
+let lockBoard = false;
+let matchedPairs = 0;
+let moveCount = 0;
+let timeLeft = GAME_TIME;
+let timerInterval = null;
+let mismatchTimeout = null;
+let gameOver = false;
+let gameWon = false;
+
+
+// ==========================================
+// START OR RESTART THE GAME
+// ==========================================
+
+function startGame() {
+
+    clearInterval(timerInterval);
+    clearTimeout(mismatchTimeout);
+
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
+    matchedPairs = 0;
+    moveCount = 0;
+    timeLeft = GAME_TIME;
+    gameOver = false;
+    gameWon = false;
+
+    document.getElementById("timer").textContent = timeLeft;
+    document.getElementById("timer").style.color = "#ffe66d";
+    document.getElementById("moves").textContent = moveCount;
+    document.getElementById("pairs").textContent =
+        "0 / " + TOTAL_PAIRS;
+
+    document.getElementById("gameMessage").textContent =
+        "Find all 14 matching pairs!";
+
+    document.getElementById("timeoutBox").style.display = "none";
+    document.getElementById("secretBox").style.display = "none";
+
+    const grid = document.getElementById("memoryGrid");
+    grid.innerHTML = "";
+
+    // Make two cards for every technology item.
+    let cards = [];
+
+    technologyItems.forEach(function(item, index) {
+        cards.push({
+            id: index,
+            name: item.name,
+            image: item.image
+        });
+
+        cards.push({
+            id: index,
+            name: item.name,
+            image: item.image
+        });
+    });
+
+    // Shuffle the cards randomly.
+    for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+
+    // Create the face-down cards.
+    cards.forEach(function(item) {
+        const card = document.createElement("button");
+
+        card.type = "button";
+        card.className = "card";
+        card.textContent = "?";
+        card.dataset.id = item.id;
+        card.dataset.image = item.image;
+        card.dataset.name = item.name;
+        card.setAttribute("aria-label", "Face-down card");
+
+        card.addEventListener("click", function() {
+            flipCard(card);
+        });
+
+        grid.appendChild(card);
+    });
+
+    // Start the countdown.
+    timerInterval = setInterval(function() {
+
+        if (gameOver || gameWon) {
+            clearInterval(timerInterval);
+            return;
+        }
+
+        timeLeft--;
+
+        document.getElementById("timer").textContent = timeLeft;
+
+        if (timeLeft <= 10) {
+            document.getElementById("timer").style.color = "#ff7373";
+        } else {
+            document.getElementById("timer").style.color = "#ffe66d";
+        }
+
+        if (timeLeft <= 0) {
+            endGame();
+        }
+
+    }, 1000);
+}
+
+
+// ==========================================
+// FLIP A CARD
+// ==========================================
+
+function flipCard(card) {
+
+    if (gameOver || gameWon || lockBoard) return;
+
+    if (card.classList.contains("flipped") ||
+        card.classList.contains("matched")) {
+        return;
+    }
+
+    card.classList.add("flipped");
+    card.textContent = card.dataset.image;
+    card.setAttribute(
+        "aria-label",
+        card.dataset.name
+    );
+
+    if (firstCard === null) {
+        firstCard = card;
+        return;
+    }
+
+    secondCard = card;
+    moveCount++;
+
+    document.getElementById("moves").textContent = moveCount;
+
+    checkMatch();
+}
+
+
+// ==========================================
+// CHECK WHETHER THE CARDS MATCH
+// ==========================================
+
+function checkMatch() {
+
+    lockBoard = true;
+
+    const isMatch =
+        firstCard.dataset.id === secondCard.dataset.id;
+
+    if (isMatch) {
+
+        firstCard.classList.remove("flipped");
+        secondCard.classList.remove("flipped");
+
+        firstCard.classList.add("matched");
+        secondCard.classList.add("matched");
+
+        firstCard.disabled = true;
+        secondCard.disabled = true;
+
+        matchedPairs++;
+
+        document.getElementById("pairs").textContent =
+            matchedPairs + " / " + TOTAL_PAIRS;
+
+        document.getElementById("gameMessage").textContent =
+            "Match found! Keep going!";
+
+        resetTurn();
+
+        if (matchedPairs === TOTAL_PAIRS) {
+            winGame();
+        }
+
+    } else {
+
+        document.getElementById("gameMessage").textContent =
+            "Not a match. Remember the locations!";
+
+        mismatchTimeout = setTimeout(function() {
+
+            if (!gameOver && !gameWon) {
+
+                hideCard(firstCard);
+                hideCard(secondCard);
+
+                resetTurn();
+            }
+
+        }, 850);
+    }
+}
+
+
+// ==========================================
+// TURN CARDS BACK OVER
+// ==========================================
+
+function hideCard(card) {
+
+    if (!card) return;
+
+    card.classList.remove("flipped");
+    card.textContent = "?";
+    card.setAttribute("aria-label", "Face-down card");
+}
+
+
+function resetTurn() {
+
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
+}
+
+
+// ==========================================
+// TIME RUNS OUT
+// ==========================================
+
+function endGame() {
+
+    gameOver = true;
+    lockBoard = true;
+
+    clearInterval(timerInterval);
+    clearTimeout(mismatchTimeout);
+
+    document.getElementById("gameMessage").textContent =
+        "Challenge failed!";
+
+    document.getElementById("timeoutBox").style.display = "block";
+
+    // Hide all unmatched cards.
+    document.querySelectorAll(".card").forEach(function(card) {
+        if (!card.classList.contains("matched")) {
+            card.classList.remove("flipped");
+            card.textContent = "?";
+            card.disabled = true;
+        }
+    });
+}
+
+
+// ==========================================
+// MEMORY GAME COMPLETED
+// ==========================================
+
+function winGame() {
+
+    if (gameOver) return;
+
+    gameWon = true;
+    lockBoard = true;
+
+    clearInterval(timerInterval);
+    clearTimeout(mismatchTimeout);
+
+    document.getElementById("gameMessage").textContent =
+        "All pairs matched! You beat the challenge!";
+
+    document.getElementById("secretBox").style.display = "block";
+
+    document.getElementById("secretBox").scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+}
+
+
+// ==========================================
+// BUTTONS
+// ==========================================
+
+document.getElementById("restartButton")
+    .addEventListener("click", startGame);
+
+document.getElementById("tryAgainButton")
+    .addEventListener("click", startGame);
+
+</script>
+
+</body>
+</html>
